@@ -11,36 +11,97 @@ typedef struct grafo {
     int** matAdj;
 }Grafo;
 
-int** CriaGrafo(Grafo grafo, int numVertices) {
-    int i, j;
-    grafo.matAdj = (int **) malloc (numVertices * sizeof(int*));
-    for(i = 0; i < numVertices; i++) {
-        grafo.matAdj[i] = (int*) malloc (numVertices * sizeof(int));
-        for( j = 0; j < numVertices; j++) {
+Grafo CriaGrafo(Grafo grafo);
+void Arestas(Grafo grafo);
+void PrintaGrafo(Grafo grafo);
+void DeletaGrafo(Grafo grafo);
+void CaminhoMinimo(Grafo grafo, int origem, int dest);
+
+int main() {
+    Grafo g;
+    char inicio, fim;
+    g = CriaGrafo(g);
+    Arestas(g);
+    printf("\nVertice inicial: ");
+    scanf(" %c",&inicio);
+    printf("Vertice final: ");
+    scanf(" %c",&fim);
+    CaminhoMinimo(g, inicio - OFFSET,fim - OFFSET);
+    DeletaGrafo(g);
+    return 0;
+}
+
+Grafo CriaGrafo(Grafo grafo) {
+    int i, j,vertices;
+    printf("\nNumero de vertices do grafo: ");
+    scanf(" %d",&vertices);
+    grafo.vertices = vertices;
+    if(vertices > 20) {
+        printf("\nERRO! Limite de 20 vertices.");
+        printf("\nDigite o numero de vertices novamente:");
+        scanf(" %d",&vertices);
+        if(vertices > 20) {
+            exit(-1);
+        }
+    }
+    grafo.matAdj = (int **) malloc (vertices * sizeof(int*));
+    for(i = 0; i < vertices; i++) {
+        grafo.matAdj[i] = (int*) malloc (vertices * sizeof(int));
+        for( j = 0; j < vertices; j++) {
             grafo.matAdj[i][j] = 0;
         }
     }
-    return grafo.matAdj;
+    return grafo;
 }
 
-bool Arestas(Grafo grafo) {
+void Arestas(Grafo grafo) {
     int numArestas, i, peso;
     char origem, dest;
     printf("\nNumero de arestas: ");
     scanf("%d",&numArestas);
+    printf("\n--Definindo arestas--\n");
     for(i = 0; i < numArestas; i++) {
-        printf("\nvertice de origem(%c - %c): ",OFFSET, OFFSET + grafo.vertices - 1);
+        printf("\nVertice de origem (letras entre '%c' e '%c'): ",OFFSET, OFFSET + grafo.vertices - 1);
         scanf(" %c",&origem);
-        printf("vertice de destino(%c - %c): ",OFFSET, OFFSET + grafo.vertices - 1);
+        printf("Vertice de destino (letras entre '%c' e '%c'): ",OFFSET, OFFSET + grafo.vertices - 1);
         scanf(" %c",&dest);
         printf("Peso: ");
         scanf("%d",&peso);
         if(peso < 0) {
-            return false;
+            printf("\nERRO! Aresta com peso negativo.");
+            printf("\nDigite o peso novamente.");
+                printf("\nPeso: ");
+                scanf("%d",&peso);
+                if(peso < 0) {
+                    DeletaGrafo(grafo);
+                    exit(-1);
+                }
         }
         grafo.matAdj[origem - OFFSET][dest - OFFSET] = peso;
     }
-    return true;
+}
+
+void PrintaGrafo(Grafo grafo) {
+    printf("\n Grafo montando com matriz de adjacencias: ");
+    printf("\n\n  ");
+    for(int i = 0; i < grafo.vertices; i++) {
+        printf("%c\t",i + OFFSET);
+    }
+    printf("\n");
+    for(int i = 0; i < grafo.vertices; i++) {
+        printf("%c ",i + OFFSET);
+        for(int j = 0; j < grafo.vertices; j++) {
+            printf("%d\t",grafo.matAdj[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void DeletaGrafo(Grafo grafo) {
+    for(int i = 0; i < grafo.vertices; i++) {
+        free(grafo.matAdj[i]);
+    }
+    free(grafo.matAdj);
 }
 
 void CaminhoMinimo(Grafo grafo, int origem, int dest) {
@@ -78,36 +139,21 @@ void CaminhoMinimo(Grafo grafo, int origem, int dest) {
             }
         }
     }
+    PrintaGrafo(grafo);
     if(passo == dest) { 
-        printf("\n\nmenor caminho entre '%c' e '%c': %d", OFFSET + origem, OFFSET + dest, custo[passo]);
-        printf("\ncaminho tomado: ");
+        printf("\nMenor caminho entre '%c' e '%c': %d", OFFSET + origem, OFFSET + dest, custo[passo]);
+        printf("\nCaminho do destino a origem: ");
         auxiliar = dest;
         while(auxiliar >= 0) {
-            printf(" %d",auxiliar);
+            printf(" '%c'",auxiliar + OFFSET);
             auxiliar = predecessor[auxiliar];
         }
     }
     else {
-        printf("/nNao existe um caminho entre '%c' e '%c'", OFFSET + origem, OFFSET + dest);
+        printf("\nNao existe um caminho entre '%c' e '%c'", OFFSET + origem, OFFSET + dest);
     }
+    free(predecessor);
+    free(custo);
+    free(fechado);
 }
 
-int main() {
-    Grafo g;
-    int vertices;
-    char inicio, fim;
-    printf("\nnumero de vertices do grafo: ");
-    scanf(" %d",&vertices);
-    g.vertices = vertices;
-    g.matAdj = CriaGrafo(g,vertices);
-    if(!Arestas(g)) {
-        printf("\n\nERRO! Aresta com peso negativo.");
-        return 0;
-    }
-    printf("\nvertice inicial: ");
-    scanf(" %c",&inicio);
-    printf("vertice final: ");
-    scanf(" %c",&fim);
-    CaminhoMinimo(g, inicio - OFFSET,fim - OFFSET);
-    return 0;
-}
